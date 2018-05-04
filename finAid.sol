@@ -13,16 +13,14 @@ Functions needed:
 -() Add new authorized viewer
 */
 
-//Defining a contract
+//Defining a financial aid contract
 contract finAid {
 
-/** Struct
-Also should theses structs be condensed IE: Add schools to FinAid? Or no because
-of needing to add new schools */
+
    struct User{
        uint _govtSender;
    }
-   
+
    struct School{
        address _school;
    }
@@ -34,7 +32,7 @@ of needing to add new schools */
    struct FinAid{
        uint _awardedAmount;
    }
-   
+
 /**Global Variables */
    uint _balance = _studentID.balance;
    Schools[] schoolListA; // Type[] variableName;
@@ -42,7 +40,9 @@ of needing to add new schools */
    mapping(address => bool) userCanRead; //Short function check that returns if userCanRead
    User[] authorizedEditorA;
    mapping(address => bool) userCanEdit; //Short function check that returns if userCanEdit
-   
+   User[] authorizedPatronsA;
+   mapping(address => bool) userCanDonate;
+
 
 /**Modifiers */
    modifier onlyAuthorizedReaders(){
@@ -51,20 +51,27 @@ of needing to add new schools */
        }
        _; // AKA Go back to the original function
    }
-   
+
     modifier onlyAuthorizedEditor(){
        if (userCanEdit[msg.sender] == false){
            revert();
        }
        _;
    }
-   
+
+    modifier onlyAuthorizedPatron(){
+      if(userCanDonate[msg.sender] == false){
+        revert;
+      }
+      _;
+    }
+
 /**Events */
    /*Authorize school or student or those with clearnace to read docu's; event()
    will create a log of */
    event NewReaderAuth(address whoAddedThem, address whoWasAdded);
    event Deposit(address _from, address _id, uint _awardedAmount);
-     
+
 /**Functions */
 
    function sendAid(uint _awardedAmount, address _school) onlyAuthorizedEditor() public {
@@ -74,15 +81,24 @@ of needing to add new schools */
    }
     /* Could ClientReceipt code work for sending cash monz?
     http://solidity.readthedocs.io/en/develop/contracts.html*/
-   
-   function newAuthReader(address _newUser) onlyAuthUser() public {
+
+   function newAuthReader(address _newUser) onlyAuthReader() public {
       authorizedReadersA.push(User({
           _school: _newUser
       }));
       isAuthUser[_newUser];
    //   NewUserAdded(msg.sender, _newUser);
   }
- 
+
+  // This should add authorizedPatrons who can donate as well, which may need further authorization restrictions in their own class
+  function newAuthPatron(address _newPatron) onlyAuthPatron() public{
+      authorizedPatronsA.push(User({
+          _school: _newUser
+        }));
+        isAuthUser[_newPatron];
+
+  }
+
    function extraAid(uint _awardedAmount, address _inStudentID) onlyAuthorizedEditor() public {
        //or would you do onlu
        _inStudentID.send(_awardedAmount);
@@ -98,8 +114,8 @@ of needing to add new schools */
                extraAid(balance, studentID);
            }
        }
-   
+
    }
-   
+
 
 }
